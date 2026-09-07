@@ -9,10 +9,17 @@
     {% if mode in ('test', 'dictation') %}<br>Правильных ответов: {{ summary.correct }} из {{ summary.total }}{% endif %}
   </p>
   <div class="d-flex justify-content-center gap-2 flex-wrap">
-    {% if scope in ('file', 'file_errors') %}
+    <form method="post" action="{{ url_for('main.start_session_route', mode=mode, scope=scope, file_id=file_id, direction=direction) }}">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-arrow-repeat me-1"></i>Начать заново
+      </button>
+    </form>
+    {% if scope == 'file' %}
       <a href="{{ url_for('main.file_detail', file_id=file_id) }}" class="btn btn-outline-info">К списку слов файла</a>
+    {% elif scope == 'file_errors' %}
+      <a href="{{ url_for('main.errors_mode_select', file_id=file_id) }}" class="btn btn-outline-info">Другой режим</a>
     {% elif scope == 'errors' %}
-      <a href="{{ url_for('main.errors_mode_select') }}" class="btn btn-outline-info">Повторить снова</a>
+      <a href="{{ url_for('main.errors_mode_select') }}" class="btn btn-outline-info">Другой режим</a>
     {% endif %}
     <a href="{{ url_for('main.index') }}" class="btn btn-primary">На главную</a>
   </div>

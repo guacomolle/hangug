@@ -31,6 +31,7 @@ def start_session(mode, scope, word_ids, file_id=None, direction='mixed'):
     session['total'] = len(word_ids)
     session['done'] = 0
     session['correct'] = 0
+    session['history'] = []
 
 
 def is_complete():
@@ -66,6 +67,40 @@ def resolve_current(correct=None):
         session['correct'] = session.get('correct', 0) + 1
     session['current'] = None
     session['current_direction'] = None
+
+
+def push_history(word_id, action):
+    history = session.get('history', [])
+    history.append({'word_id': word_id, 'action': action})
+    session['history'] = history
+
+
+def has_history():
+    return bool(session.get('history'))
+
+
+def undo_last():
+    """Reverse the last memorize 'next'/'skip' action and show that word again."""
+    history = session.get('history', [])
+    if not history:
+        return
+
+    entry = history.pop()
+    session['history'] = history
+
+    current = session.get('current')
+    queue = session.get('queue', [])
+    if current is not None:
+        queue.insert(0, current)
+
+    if entry['action'] == 'skip':
+        if entry['word_id'] in queue:
+            queue.remove(entry['word_id'])
+    else:  # 'next'
+        session['done'] = max(session.get('done', 0) - 1, 0)
+
+    session['queue'] = queue
+    session['current'] = entry['word_id']
 
 
 def progress():

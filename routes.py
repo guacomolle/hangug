@@ -17,12 +17,15 @@ from quiz import (
 )
 from session_logic import (
     get_problem_word_ids,
+    has_history,
     is_complete,
     pop_next_word_id,
     progress,
+    push_history,
     resolve_current,
     skip_current,
     start_session,
+    undo_last,
 )
 
 bp = Blueprint('main', __name__)
@@ -105,7 +108,7 @@ def errors_mode_select():
     return render_template('errors_select.html', problem_count=problem_count, scope=scope, file=file)
 
 
-@bp.route('/start-session')
+@bp.route('/start-session', methods=['GET', 'POST'])
 def start_session_route():
     mode = request.args.get('mode')
     scope = request.args.get('scope')
@@ -164,11 +167,16 @@ def session_memorize():
         return redirect(url_for('main.session_complete'))
     word_id = pop_next_word_id()
     word = Word.query.get_or_404(word_id)
-    return render_template('memorize.html', word=word, hard=is_hard(word.id), progress=progress())
+    return render_template(
+        'memorize.html', word=word, hard=is_hard(word.id), progress=progress(), has_history=has_history()
+    )
 
 
 @bp.route('/session/memorize/next', methods=['POST'])
 def session_memorize_next():
+    word_id = session.get('current')
+    if word_id is not None:
+        push_history(word_id, 'next')
     resolve_current()
     if is_complete():
         return redirect(url_for('main.session_complete'))
@@ -177,7 +185,16 @@ def session_memorize_next():
 
 @bp.route('/session/memorize/skip', methods=['POST'])
 def session_memorize_skip():
+    word_id = session.get('current')
+    if word_id is not None:
+        push_history(word_id, 'skip')
     skip_current()
+    return redirect(url_for('main.session_memorize'))
+
+
+@bp.route('/session/memorize/back', methods=['POST'])
+def session_memorize_back():
+    undo_last()
     return redirect(url_for('main.session_memorize'))
 
 
@@ -214,8 +231,11 @@ def session_complete():
     mode = session.get('mode')
     scope = session.get('scope')
     file_id = session.get('file_id')
+    direction = session.get('direction', 'mixed')
     summary = progress()
-    return render_template('session_complete.html', mode=mode, scope=scope, file_id=file_id, summary=summary)
+    return render_template(
+        'session_complete.html', mode=mode, scope=scope, file_id=file_id, direction=direction, summary=summary
+    )
 
 
 # ---- JSON API for test & dictation ----
