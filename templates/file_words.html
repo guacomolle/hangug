@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}{{ file.name }} — Hangugo Words{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('main.index') }}" class="text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> К библиотеке</a>
+  <h1 class="h3 mt-2 mb-0">{{ file.name }}</h1>
+  <small class="text-secondary">Загружен {{ file.upload_date.strftime('%d.%m.%Y %H:%M') }} · {{ words|length }} слов</small>
+</div>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-body">
+    <h2 class="h5 card-title mb-3">Режимы работы</h2>
+    <div class="row g-2">
+      <div class="col-12 col-md-4">
+        <a class="btn btn-outline-info w-100" href="{{ url_for('main.start_session_route', mode='memorize', scope='file', file_id=file.id) }}">
+          <i class="bi bi-card-text me-1"></i>Запоминание
+        </a>
+      </div>
+      <div class="col-12 col-md-4">
+        <a class="btn btn-outline-info w-100" href="{{ url_for('main.start_session_route', mode='test', scope='file', file_id=file.id, direction='mixed') }}">
+          <i class="bi bi-list-check me-1"></i>Тестирование
+        </a>
+      </div>
+      <div class="col-12 col-md-4">
+        <a class="btn btn-outline-info w-100" href="{{ url_for('main.start_session_route', mode='dictation', scope='file', file_id=file.id) }}">
+          <i class="bi bi-pencil me-1"></i>Диктант
+        </a>
+      </div>
+    </div>
+    {% if local_problem_count > 0 %}
+    <hr class="border-secondary">
+    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('main.errors_mode_select', file_id=file.id) }}">
+      <i class="bi bi-exclamation-triangle me-1"></i>Повторить ошибки этого файла ({{ local_problem_count }})
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-dark table-striped align-middle">
+    <thead>
+      <tr><th>Корейский</th><th>Русский</th></tr>
+    </thead>
+    <tbody>
+      {% for word in words %}
+      <tr><td>{{ word.korean }}</td><td>{{ word.russian }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

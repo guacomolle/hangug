@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Только ошибки — Hangugo Words{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('main.file_detail', file_id=file.id) if file else url_for('main.index') }}"
+     class="text-secondary text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Назад
+  </a>
+</div>
+<h1 class="h3 mb-2">
+  <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+  {% if file %}Ошибки файла «{{ file.name }}»{% else %}Только ошибки{% endif %}
+</h1>
+<p class="text-secondary mb-4">Проблемных слов: {{ problem_count }}. Выберите режим повторения.</p>
+
+<div class="row g-2">
+  <div class="col-12 col-md-4">
+    <a class="btn btn-outline-info w-100 py-3"
+       href="{{ url_for('main.start_session_route', mode='memorize', scope=scope, file_id=file.id if file else none) }}">
+      <i class="bi bi-card-text me-1"></i>Запоминание
+    </a>
+  </div>
+  <div class="col-12 col-md-4">
+    <a class="btn btn-outline-info w-100 py-3"
+       href="{{ url_for('main.start_session_route', mode='test', scope=scope, file_id=file.id if file else none, direction='mixed') }}">
+      <i class="bi bi-list-check me-1"></i>Тестирование
+    </a>
+  </div>
+  <div class="col-12 col-md-4">
+    <a class="btn btn-outline-info w-100 py-3"
+       href="{{ url_for('main.start_session_route', mode='dictation', scope=scope, file_id=file.id if file else none) }}">
+      <i class="bi bi-pencil me-1"></i>Диктант
+    </a>
+  </div>
+</div>
+{% endblock %}

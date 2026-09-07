@@ -1,0 +1,9 @@
+<div class="mb-4">
+  <div class="d-flex justify-content-between small text-secondary mb-1">
+    <span>{{ progress.done }} / {{ progress.total }}</span>
+    <span>{{ progress.remaining }} осталось</span>
+  </div>
+  <div class="progress" role="progressbar" style="height: 8px;">
+    <div class="progress-bar bg-info" style="width: {{ progress.percent }}%;"></div>
+  </div>
+</div>

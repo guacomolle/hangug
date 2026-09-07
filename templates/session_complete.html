@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Сессия завершена — Hangugo Words{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <i class="bi bi-check-circle display-3 text-success mb-3 d-block"></i>
+  <h1 class="h3 mb-3">Сессия завершена!</h1>
+  <p class="text-secondary mb-4">
+    Обработано слов: {{ summary.total }}
+    {% if mode in ('test', 'dictation') %}<br>Правильных ответов: {{ summary.correct }} из {{ summary.total }}{% endif %}
+  </p>
+  <div class="d-flex justify-content-center gap-2 flex-wrap">
+    {% if scope in ('file', 'file_errors') %}
+      <a href="{{ url_for('main.file_detail', file_id=file_id) }}" class="btn btn-outline-info">К списку слов файла</a>
+    {% elif scope == 'errors' %}
+      <a href="{{ url_for('main.errors_mode_select') }}" class="btn btn-outline-info">Повторить снова</a>
+    {% endif %}
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">На главную</a>
+  </div>
+</div>
+{% endblock %}
