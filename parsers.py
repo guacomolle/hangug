@@ -95,13 +95,18 @@ def parse_docx(file_stream) -> List[Tuple[str, str]]:
 
 
 def parse_file(filename: str, file_stream) -> List[Tuple[str, str]]:
+    # Read into a plain BytesIO: the raw upload stream can be a
+    # tempfile.SpooledTemporaryFile, which on Python < 3.11 has no
+    # .seekable() — openpyxl/python-docx need a fully seekable stream.
+    buffer = io.BytesIO(file_stream.read())
+
     name = filename.lower()
     if name.endswith('.csv'):
-        pairs = parse_csv(file_stream)
+        pairs = parse_csv(buffer)
     elif name.endswith('.xlsx'):
-        pairs = parse_xlsx(file_stream)
+        pairs = parse_xlsx(buffer)
     elif name.endswith('.docx'):
-        pairs = parse_docx(file_stream)
+        pairs = parse_docx(buffer)
     else:
         raise ValueError('Неподдерживаемый формат файла')
 
