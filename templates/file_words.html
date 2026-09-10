@@ -1,10 +1,25 @@
 {% extends 'base.html' %}
 {% block title %}{{ file.name }} — Hangugo Words{% endblock %}
 {% block content %}
-<div class="mb-3">
-  <a href="{{ url_for('main.index') }}" class="text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> К библиотеке</a>
-  <h1 class="h3 mt-2 mb-0">{{ file.name }}</h1>
-  <small class="text-secondary">Загружен {{ file.upload_date.strftime('%d.%m.%Y %H:%M') }} · {{ words|length }} слов</small>
+<div class="mb-3 d-flex justify-content-between align-items-start flex-wrap gap-2">
+  <div>
+    <a href="{{ url_for('main.index') }}" class="text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> К библиотеке</a>
+    <h1 class="h3 mt-2 mb-0 d-flex align-items-center gap-2">
+      {{ file.name }}
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#renameModal" title="Переименовать">
+        <i class="bi bi-pencil"></i>
+      </button>
+    </h1>
+    <small class="text-secondary">Загружен {{ file.upload_date.strftime('%d.%m.%Y %H:%M') }} · {{ words|length }} слов</small>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#addFileModal">
+      <i class="bi bi-file-earmark-plus me-1"></i>Добавить файл
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#addWordModal">
+      <i class="bi bi-plus-lg me-1"></i>Добавить слово
+    </button>
+  </div>
 </div>
 
 <div class="card bg-dark border-secondary mb-4">
@@ -62,4 +77,76 @@
     </tbody>
   </table>
 </div>
+
+<div class="modal fade" id="addFileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark border-secondary">
+      <form method="post" action="{{ url_for('main.add_words', file_id=file.id) }}" enctype="multipart/form-data">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Добавить файл</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-secondary small">
+            Поддерживаемые форматы: .docx, .xlsx, .csv. Слова из файла будут добавлены к текущему списку.
+          </p>
+          <input class="form-control" type="file" name="file" accept=".docx,.xlsx,.csv" required>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Загрузить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addWordModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark border-secondary">
+      <form method="post" action="{{ url_for('main.add_word', file_id=file.id) }}" id="addWordForm">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Добавить слово</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <div id="addWordStep1">
+            <label class="form-label" for="addWordKorean">Корейское слово</label>
+            <input type="text" class="form-control" name="korean" id="addWordKorean" autocomplete="off" required>
+          </div>
+          <div id="addWordStep2" class="d-none">
+            <label class="form-label" for="addWordRussian">Перевод на русский</label>
+            <input type="text" class="form-control" name="russian" id="addWordRussian" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-outline-secondary d-none" id="addWordBackBtn">Назад</button>
+          <button type="button" class="btn btn-primary" id="addWordNextBtn">Далее</button>
+          <button type="submit" class="btn btn-success d-none" id="addWordDoneBtn">Готово</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="renameModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark border-secondary">
+      <form method="post" action="{{ url_for('main.rename_file', file_id=file.id) }}">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Переименовать</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control" name="name" value="{{ file.name }}" required>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_word.js') }}"></script>
 {% endblock %}

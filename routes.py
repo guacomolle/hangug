@@ -88,6 +88,68 @@ def file_detail(file_id):
     )
 
 
+@bp.route('/file/<int:file_id>/add-words', methods=['POST'])
+def add_words(file_id):
+    file = File.query.get_or_404(file_id)
+
+    uploaded = request.files.get('file')
+    if not uploaded or uploaded.filename == '':
+        flash('Выберите файл для загрузки', 'danger')
+        return redirect(url_for('main.file_detail', file_id=file.id))
+
+    if not allowed_file(uploaded.filename):
+        flash('Неподдерживаемый формат файла. Разрешены: .docx, .xlsx, .csv', 'danger')
+        return redirect(url_for('main.file_detail', file_id=file.id))
+
+    filename = secure_filename(uploaded.filename)
+
+    try:
+        pairs = parse_file(filename, uploaded.stream)
+    except Exception as exc:
+        flash(f'Ошибка обработки файла: {exc}', 'danger')
+        return redirect(url_for('main.file_detail', file_id=file.id))
+
+    for kr, ru in pairs:
+        db.session.add(Word(file_id=file.id, korean=kr, russian=ru))
+    db.session.commit()
+
+    flash(f'Добавлено слов: {len(pairs)}', 'success')
+    return redirect(url_for('main.file_detail', file_id=file.id))
+
+
+@bp.route('/file/<int:file_id>/add-word', methods=['POST'])
+def add_word(file_id):
+    file = File.query.get_or_404(file_id)
+
+    korean = (request.form.get('korean') or '').strip()
+    russian = (request.form.get('russian') or '').strip()
+
+    if not korean or not russian:
+        flash('Заполните оба поля: корейское слово и перевод', 'danger')
+        return redirect(url_for('main.file_detail', file_id=file.id))
+
+    db.session.add(Word(file_id=file.id, korean=korean, russian=russian))
+    db.session.commit()
+
+    flash('Слово добавлено', 'success')
+    return redirect(url_for('main.file_detail', file_id=file.id))
+
+
+@bp.route('/file/<int:file_id>/rename', methods=['POST'])
+def rename_file(file_id):
+    file = File.query.get_or_404(file_id)
+    name = (request.form.get('name') or '').strip()
+
+    if not name:
+        flash('Название не может быть пустым', 'danger')
+    else:
+        file.name = name
+        db.session.commit()
+        flash('Название обновлено', 'success')
+
+    return redirect(request.referrer or url_for('main.file_detail', file_id=file.id))
+
+
 @bp.route('/errors')
 def errors_mode_select():
     file_id = request.args.get('file_id', type=int)
