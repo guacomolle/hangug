@@ -3,6 +3,9 @@
 {% block content %}
 <div id="progress-wrap">{% include '_progress.html' %}</div>
 
+{% if listening %}
+<div class="text-center text-secondary small mb-3"><i class="bi bi-headphones me-1"></i>Аудирование: слушайте слово и выбирайте перевод</div>
+{% else %}
 <div class="text-end mb-3">
   <div class="btn-group btn-group-sm" role="group" aria-label="Направление теста">
     <button type="button" class="btn btn-outline-secondary" id="dir-kr-ru">KR &rarr; RU</button>
@@ -10,10 +13,17 @@
   </div>
   <div class="form-text">Переключение направления вступит в силу со следующего слова</div>
 </div>
+{% endif %}
 
 <div class="card bg-dark border-secondary mx-auto mb-4" style="max-width: 520px;">
   <div class="card-body text-center">
+    {% if listening %}
+    <button type="button" id="play-btn" class="btn btn-outline-info btn-lg rounded-circle mb-4" style="width: 88px; height: 88px;">
+      <i class="bi bi-volume-up-fill fs-2"></i>
+    </button>
+    {% else %}
     <p class="fs-3 fw-bold mb-4" id="prompt">Загрузка...</p>
+    {% endif %}
     <div id="options" class="d-grid gap-2"></div>
     <div id="feedback" class="mt-3 fw-semibold"></div>
   </div>
@@ -33,7 +43,8 @@
     skipUrl: "{{ url_for('main.api_skip') }}",
     directionUrl: "{{ url_for('main.api_direction') }}",
     completeUrl: "{{ url_for('main.session_complete') }}",
-    mode: 'test'
+    mode: 'test',
+    listening: {{ 'true' if listening else 'false' }}
   });
 </script>
 {% endblock %}

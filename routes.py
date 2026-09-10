@@ -114,10 +114,15 @@ def start_session_route():
     scope = request.args.get('scope')
     file_id = request.args.get('file_id', type=int)
     direction = request.args.get('direction', 'mixed')
+    listening = request.args.get('listening') == '1'
 
     if mode not in ('memorize', 'test', 'dictation'):
         flash('Некорректный режим', 'danger')
         return redirect(url_for('main.index'))
+
+    # Listening drills only make sense as audio-of-Korean prompts.
+    if listening and mode == 'test':
+        direction = 'kr_ru'
 
     if scope == 'file':
         file = File.query.get_or_404(file_id)
@@ -125,7 +130,7 @@ def start_session_route():
         if not word_ids:
             flash('В этом файле нет слов', 'warning')
             return redirect(url_for('main.file_detail', file_id=file.id))
-        start_session(mode, 'file', word_ids, file_id=file.id, direction=direction)
+        start_session(mode, 'file', word_ids, file_id=file.id, direction=direction, listening=listening)
 
     elif scope == 'file_errors':
         file = File.query.get_or_404(file_id)
@@ -133,14 +138,14 @@ def start_session_route():
         if not word_ids:
             flash('В этом файле нет проблемных слов', 'warning')
             return redirect(url_for('main.file_detail', file_id=file.id))
-        start_session(mode, 'file_errors', word_ids, file_id=file.id, direction=direction)
+        start_session(mode, 'file_errors', word_ids, file_id=file.id, direction=direction, listening=listening)
 
     elif scope == 'errors':
         word_ids = get_problem_word_ids()
         if not word_ids:
             flash('Список проблемных слов пуст', 'warning')
             return redirect(url_for('main.index'))
-        start_session(mode, 'errors', word_ids, file_id=None, direction=direction)
+        start_session(mode, 'errors', word_ids, file_id=None, direction=direction, listening=listening)
 
     else:
         flash('Некорректная область слов', 'danger')
@@ -214,7 +219,9 @@ def session_test():
         return redirect(url_for('main.index'))
     if is_complete():
         return redirect(url_for('main.session_complete'))
-    return render_template('test.html', progress=progress(), direction=session.get('direction'))
+    return render_template(
+        'test.html', progress=progress(), direction=session.get('direction'), listening=session.get('listening', False)
+    )
 
 
 @bp.route('/session/dictation')
@@ -223,7 +230,7 @@ def session_dictation():
         return redirect(url_for('main.index'))
     if is_complete():
         return redirect(url_for('main.session_complete'))
-    return render_template('dictation.html', progress=progress())
+    return render_template('dictation.html', progress=progress(), listening=session.get('listening', False))
 
 
 @bp.route('/session/complete')
@@ -232,9 +239,16 @@ def session_complete():
     scope = session.get('scope')
     file_id = session.get('file_id')
     direction = session.get('direction', 'mixed')
+    listening = session.get('listening', False)
     summary = progress()
     return render_template(
-        'session_complete.html', mode=mode, scope=scope, file_id=file_id, direction=direction, summary=summary
+        'session_complete.html',
+        mode=mode,
+        scope=scope,
+        file_id=file_id,
+        direction=direction,
+        listening=listening,
+        summary=summary,
     )
 
 
@@ -261,9 +275,13 @@ def api_question():
         question = build_test_question(word, pool, direction)
         return jsonify({'complete': False, 'question': question, 'progress': progress()})
 
+    # Regular dictation shows the Russian meaning and expects the Korean word typed back.
+    # Listening dictation instead speaks the Korean word aloud (nothing shown) and
+    # expects the same Korean word transcribed from what was heard.
+    prompt = word.korean if session.get('listening') else word.russian
     return jsonify({
         'complete': False,
-        'question': {'word_id': word.id, 'prompt': word.russian},
+        'question': {'word_id': word.id, 'prompt': prompt},
         'progress': progress(),
     })
 

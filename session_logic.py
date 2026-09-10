@@ -16,7 +16,7 @@ def get_problem_word_ids(file_id=None):
     return list(ids)
 
 
-def start_session(mode, scope, word_ids, file_id=None, direction='mixed'):
+def start_session(mode, scope, word_ids, file_id=None, direction='mixed', listening=False):
     word_ids = list(word_ids)
     if mode in ('test', 'dictation'):
         random.shuffle(word_ids)
@@ -25,6 +25,7 @@ def start_session(mode, scope, word_ids, file_id=None, direction='mixed'):
     session['scope'] = scope
     session['file_id'] = file_id
     session['direction'] = direction
+    session['listening'] = listening
     session['queue'] = word_ids
     session['current'] = None
     session['current_direction'] = None

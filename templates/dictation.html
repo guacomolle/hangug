@@ -5,8 +5,15 @@
 
 <div class="card bg-dark border-secondary mx-auto mb-4" style="max-width: 520px;">
   <div class="card-body text-center">
+    {% if listening %}
+    <p class="text-secondary mb-1"><i class="bi bi-headphones me-1"></i>Послушайте и введите корейское слово:</p>
+    <button type="button" id="play-btn" class="btn btn-outline-info btn-lg rounded-circle mb-4" style="width: 88px; height: 88px;">
+      <i class="bi bi-volume-up-fill fs-2"></i>
+    </button>
+    {% else %}
     <p class="text-secondary mb-1">Переведите на корейский:</p>
     <p class="fs-3 fw-bold mb-4" id="prompt">Загрузка...</p>
+    {% endif %}
     <form id="dictation-form" autocomplete="off">
       <input type="text" class="form-control form-control-lg text-center mb-3" id="answer-input" placeholder="한국어" lang="ko">
       <button type="submit" class="btn btn-primary w-100" id="submit-btn">Проверить</button>
@@ -28,7 +35,8 @@
     answerUrl: "{{ url_for('main.api_answer') }}",
     skipUrl: "{{ url_for('main.api_skip') }}",
     completeUrl: "{{ url_for('main.session_complete') }}",
-    mode: 'dictation'
+    mode: 'dictation',
+    listening: {{ 'true' if listening else 'false' }}
   });
 </script>
 {% endblock %}

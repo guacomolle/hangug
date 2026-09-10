@@ -27,6 +27,20 @@
         </a>
       </div>
     </div>
+    <hr class="border-secondary">
+    <div class="small text-secondary mb-2"><i class="bi bi-headphones me-1"></i>Аудирование (на слух)</div>
+    <div class="row g-2">
+      <div class="col-12 col-md-6">
+        <a class="btn btn-outline-info w-100" href="{{ url_for('main.start_session_route', mode='test', scope='file', file_id=file.id, listening=1) }}">
+          <i class="bi bi-volume-up me-1"></i>Выбор варианта
+        </a>
+      </div>
+      <div class="col-12 col-md-6">
+        <a class="btn btn-outline-info w-100" href="{{ url_for('main.start_session_route', mode='dictation', scope='file', file_id=file.id, listening=1) }}">
+          <i class="bi bi-volume-up me-1"></i>Ввод текста
+        </a>
+      </div>
+    </div>
     {% if local_problem_count > 0 %}
     <hr class="border-secondary">
     <a class="btn btn-outline-danger btn-sm" href="{{ url_for('main.errors_mode_select', file_id=file.id) }}">

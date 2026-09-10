@@ -1,5 +1,6 @@
 function initQuiz(config) {
   const promptEl = document.getElementById('prompt');
+  const playBtn = document.getElementById('play-btn');
   const feedbackEl = document.getElementById('feedback');
   const skipBtn = document.getElementById('skip-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -15,6 +16,24 @@ function initQuiz(config) {
 
   let answered = false;
   let currentWordId = null;
+  let currentPromptText = '';
+
+  function speak(text) {
+    if (!('speechSynthesis' in window) || !text) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    window.speechSynthesis.speak(utterance);
+  }
+
+  if (playBtn) {
+    if (!('speechSynthesis' in window)) {
+      playBtn.disabled = true;
+      playBtn.title = 'Синтез речи не поддерживается в этом браузере';
+    } else {
+      playBtn.addEventListener('click', () => speak(currentPromptText));
+    }
+  }
 
   function renderProgress(progress) {
     progressWrap.innerHTML = `
@@ -55,7 +74,13 @@ function initQuiz(config) {
     }
 
     currentWordId = data.question.word_id;
-    promptEl.textContent = data.question.prompt;
+    currentPromptText = data.question.prompt;
+
+    if (config.listening) {
+      speak(currentPromptText);
+    } else if (promptEl) {
+      promptEl.textContent = data.question.prompt;
+    }
 
     if (config.mode === 'test') {
       optionsEl.innerHTML = '';
