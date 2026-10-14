@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Редактировать слово — Hangugo Words{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Редактировать слово</h1>
+<form method="post" action="{{ url_for('main.edit_word', file_id=word.file_id, word_id=word.id) }}" class="card bg-dark border-secondary">
+  <div class="card-body">
+    <div class="mb-3">
+      <label for="korean" class="form-label">Корейское слово</label>
+      <input id="korean" name="korean" class="form-control" value="{{ korean }}" maxlength="255" required>
+    </div>
+    <div class="mb-3">
+      <label for="russian" class="form-label">Перевод на русский</label>
+      <input id="russian" name="russian" class="form-control" value="{{ russian }}" maxlength="255" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('main.file_detail', file_id=word.file_id) }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

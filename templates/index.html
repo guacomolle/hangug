@@ -17,6 +17,7 @@
       <a href="{{ url_for('main.errors_mode_select') }}" class="btn btn-outline-danger btn-lg w-100 py-3">
         <i class="bi bi-exclamation-triangle me-2"></i>Режим «Только ошибки» ({{ problem_count }})
       </a>
+      <a href="{{ url_for('main.clear_errors') }}" class="btn btn-sm btn-outline-secondary mt-2">Очистить список ошибок</a>
     {% else %}
       <button class="btn btn-outline-secondary btn-lg w-100 py-3" disabled>
         <i class="bi bi-exclamation-triangle me-2"></i>Режим «Только ошибки» (нет слов)

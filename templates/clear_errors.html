@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Очистить список ошибок — Hangugo Words{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Очистить список «Повторять ошибки»?</h1>
+<div class="card bg-dark border-secondary">
+  <div class="card-body">
+    <p>Сейчас в списке {{ problem_count }} проблемных слов.</p>
+    <p>Будут удалены вся накопленная история ошибок и все отметки «сложное слово»
+      во всех библиотеках. Список повторения станет пустым. Слова и переводы останутся.</p>
+    <p class="text-secondary">Открытая тренировка по ошибкам в этом браузере завершится.
+      Новые ошибки начнут накапливаться заново. Отменить сброс нельзя.</p>
+    <form method="post" action="{{ url_for('main.clear_errors') }}">
+      <button type="submit" name="confirm" value="clear" class="btn btn-danger">Да, очистить ошибки и отметки сложности</button>
+      <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

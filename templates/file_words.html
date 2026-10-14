@@ -68,11 +68,23 @@
 <div class="table-responsive">
   <table class="table table-dark table-striped align-middle">
     <thead>
-      <tr><th>Корейский</th><th>Русский</th></tr>
+      <tr><th>Корейский</th><th>Русский</th><th>Действия</th></tr>
     </thead>
     <tbody>
       {% for word in words %}
-      <tr><td>{{ word.korean }}</td><td>{{ word.russian }}</td></tr>
+      <tr>
+        <td>{{ word.korean }}</td><td>{{ word.russian }}</td>
+        <td>
+          <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-info" href="{{ url_for('main.edit_word', file_id=file.id, word_id=word.id) }}">Изменить</a>
+            <form method="post" action="{{ url_for('main.delete_word', file_id=file.id, word_id=word.id) }}" class="delete-word-form">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" class="text-secondary">В библиотеке пока нет слов.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -88,7 +100,9 @@
         </div>
         <div class="modal-body">
           <p class="text-secondary small">
-            Поддерживаемые форматы: .docx, .xlsx, .csv. Слова из файла будут добавлены к текущему списку.
+            Поддерживаемые форматы: .docx, .xlsx, .csv. Добавятся только новые корейские слова.
+            Повторы в этой библиотеке и внутри файла будут пропущены, даже если перевод отличается.
+            Исходный файл не изменяется.
           </p>
           <input class="form-control" type="file" name="file" accept=".docx,.xlsx,.csv" required>
         </div>
@@ -149,4 +163,5 @@
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/add_word.js') }}"></script>
+<script src="{{ url_for('static', filename='js/word_actions.js') }}"></script>
 {% endblock %}

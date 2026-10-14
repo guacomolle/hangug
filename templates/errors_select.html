@@ -12,6 +12,7 @@
   {% if file %}Ошибки файла «{{ file.name }}»{% else %}Только ошибки{% endif %}
 </h1>
 <p class="text-secondary mb-4">Проблемных слов: {{ problem_count }}. Выберите режим повторения.</p>
+<p><a class="btn btn-sm btn-outline-danger" href="{{ url_for('main.clear_errors') }}">Очистить ошибки и отметки сложности во всех библиотеках</a></p>
 
 <div class="row g-2">
   <div class="col-12 col-md-4">

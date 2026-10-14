@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+.test-deps/
 venv/
 env/
 instance/

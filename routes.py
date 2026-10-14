@@ -1,9 +1,10 @@
 from datetime import datetime
+import unicodedata
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 
-from models import File, Word, db
+from models import ErrorLog, File, HardWord, Word, db
 from parsers import parse_file
 from quiz import (
     build_test_question,
@@ -35,6 +36,16 @@ ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'docx'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _word_key(korean):
+    return unicodedata.normalize('NFC', korean.strip()).casefold()
+
+
+def _clear_training_session():
+    for key in ('mode', 'scope', 'file_id', 'direction', 'listening', 'queue',
+                'current', 'current_direction', 'total', 'done', 'correct', 'history'):
+        session.pop(key, None)
 
 
 @bp.route('/')
@@ -109,12 +120,51 @@ def add_words(file_id):
         flash(f'Ошибка обработки файла: {exc}', 'danger')
         return redirect(url_for('main.file_detail', file_id=file.id))
 
+    seen = {_word_key(word.korean) for word in file.words}
+    added = 0
     for kr, ru in pairs:
+        key = _word_key(kr)
+        if key in seen:
+            continue
+        seen.add(key)
         db.session.add(Word(file_id=file.id, korean=kr, russian=ru))
+        added += 1
     db.session.commit()
 
-    flash(f'Добавлено слов: {len(pairs)}', 'success')
+    flash(f'Добавлено слов: {added}. Пропущено повторов: {len(pairs) - added}', 'success')
     return redirect(url_for('main.file_detail', file_id=file.id))
+
+
+@bp.route('/file/<int:file_id>/word/<int:word_id>/edit', methods=['GET', 'POST'])
+def edit_word(file_id, word_id):
+    word = Word.query.filter_by(id=word_id, file_id=file_id).first_or_404()
+    if request.method == 'POST':
+        korean = (request.form.get('korean') or '').strip()
+        russian = (request.form.get('russian') or '').strip()
+        if not korean or not russian or len(korean) > 255 or len(russian) > 255:
+            flash('Заполните оба поля (не более 255 символов каждое)', 'danger')
+            return render_template('edit_word.html', word=word, korean=korean, russian=russian), 400
+        word.korean = korean
+        word.russian = russian
+        db.session.commit()
+        session['current_direction'] = None
+        flash('Слово обновлено', 'success')
+        return redirect(url_for('main.file_detail', file_id=file_id))
+    return render_template('edit_word.html', word=word, korean=word.korean, russian=word.russian)
+
+
+@bp.route('/file/<int:file_id>/word/<int:word_id>/delete', methods=['POST'])
+def delete_word(file_id, word_id):
+    word = Word.query.filter_by(id=word_id, file_id=file_id).first_or_404()
+    db.session.delete(word)
+    db.session.commit()
+    # A training session can also be open in another tab of this browser.
+    if (session.get('current') == word_id or word_id in session.get('queue', [])
+            or any(item['word_id'] == word_id for item in session.get('history', []))):
+        _clear_training_session()
+        flash('Текущая тренировка завершена: её список слов изменился', 'info')
+    flash('Слово удалено', 'success')
+    return redirect(url_for('main.file_detail', file_id=file_id))
 
 
 @bp.route('/file/<int:file_id>/add-word', methods=['POST'])
@@ -148,6 +198,23 @@ def rename_file(file_id):
         flash('Название обновлено', 'success')
 
     return redirect(request.referrer or url_for('main.file_detail', file_id=file.id))
+
+
+@bp.route('/errors/clear', methods=['GET', 'POST'])
+def clear_errors():
+    if request.method == 'GET':
+        return render_template('clear_errors.html', problem_count=len(get_problem_word_ids()))
+    if request.form.get('confirm') != 'clear':
+        flash('Подтвердите очистку списка ошибок', 'warning')
+        return redirect(url_for('main.clear_errors'))
+
+    ErrorLog.query.delete(synchronize_session=False)
+    HardWord.query.delete(synchronize_session=False)
+    db.session.commit()
+    if session.get('scope') in ('errors', 'file_errors'):
+        _clear_training_session()
+    flash('Список повторения очищен: история ошибок и отметки сложности сброшены. Слова сохранены.', 'success')
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/errors')
